@@ -26,7 +26,7 @@ const LoadingScreen = ({ onComplete }) => {
       // Wait a moment then fade out
       const timer = setTimeout(() => {
         setIsVisible(false);
-        setTimeout(onComplete, 800);
+        setTimeout(onComplete, 600);
       }, 500);
       return () => clearTimeout(timer);
     }
@@ -38,8 +38,9 @@ const LoadingScreen = ({ onComplete }) => {
         <motion.div
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.8, ease: 'easeInOut' }}
-          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#080b11]"
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
+          style={{ backgroundColor: '#050510' }}
         >
           {/* Logo */}
           <motion.div
@@ -48,7 +49,7 @@ const LoadingScreen = ({ onComplete }) => {
             transition={{ duration: 0.6 }}
             className="font-fantasy text-gold-premium text-3xl tracking-[4px] mb-8 animate-pulse-glow"
           >
-            OPIK
+            GINIMAGE
           </motion.div>
 
           {/* Loading bar container */}

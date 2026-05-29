@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 
 const TitleScreen = ({ isActive, onEnter }) => {
   const [isBlinking, setIsBlinking] = useState(true);
+  const starTimeRef = useRef(0); // Time counter for star spawn
   const canvasRef = useRef(null);
   const starsRef = useRef([]);
   const shootingStarsRef = useRef([]);
@@ -54,6 +56,7 @@ const TitleScreen = ({ isActive, onEnter }) => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       starsRef.current = [];
+      // Initialize stars with 0 opacity (not visible yet)
       for (let i = 0; i < 150; i++) {
         starsRef.current.push({
           x: Math.random() * canvas.width,
@@ -64,6 +67,8 @@ const TitleScreen = ({ isActive, onEnter }) => {
           brightness: Math.random() * 0.4 + 0.6,
           twinkleDir: 1,
           twinkleSpeed: Math.random() * 0.01 + 0.005,
+          opacity: 0, // Each star starts invisible
+          spawnTime: Math.random() * 5000, // Random time to appear (0-5 seconds)
         });
       }
     };
@@ -75,12 +80,24 @@ const TitleScreen = ({ isActive, onEnter }) => {
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Update time counter
+      starTimeRef.current += 16; // Approximate 60fps
+
       // Parallax offset - BIG movement (80px max)
       const mx = mouseRef.current.x * 80;
       const my = mouseRef.current.y * 60;
 
       // Draw stars with parallax
       starsRef.current.forEach(star => {
+        // Spawn animation - star appears based on its spawnTime
+        if (starTimeRef.current < star.spawnTime) {
+          // Star hasn't spawned yet, don't draw
+          return;
+        }
+
+        const spawnProgress = Math.min((starTimeRef.current - star.spawnTime) / 500, 1); // 500ms to fully appear
+        const currentOpacity = spawnProgress; // Simple linear fade-in
+
         // Drift
         star.x += star.speedX;
         star.y += star.speedY;
@@ -101,16 +118,16 @@ const TitleScreen = ({ isActive, onEnter }) => {
         star.brightness += star.twinkleSpeed * star.twinkleDir;
         if (star.brightness > 1 || star.brightness < 0.4) star.twinkleDir *= -1;
 
-        // Star
+        // Star with individual fade-in opacity
         ctx.beginPath();
         ctx.arc(drawX, drawY, star.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness})`;
+        ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness * currentOpacity})`;
         ctx.fill();
 
-        // Glow
+        // Glow with fade-in opacity
         ctx.beginPath();
         ctx.arc(drawX, drawY, star.size * 3, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(200, 220, 255, ${star.brightness * 0.25})`;
+        ctx.fillStyle = `rgba(200, 220, 255, ${star.brightness * currentOpacity * 0.25})`;
         ctx.fill();
       });
 
@@ -170,31 +187,80 @@ const TitleScreen = ({ isActive, onEnter }) => {
   if (!isActive) return null;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 999, background: '#050510', overflow: 'hidden' }}>
-      {/* Canvas Stars BG */}
-      <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 1 }} />
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 1.2, ease: 'easeOut' }}
+      style={{ position: 'fixed', inset: 0, zIndex: 998, background: '#050510', overflow: 'hidden' }}
+    >
+      {/* Canvas Stars BG - fades in */}
+      <motion.canvas
+        ref={canvasRef}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 2, delay: 0.3 }}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 1 }}
+      />
 
-      {/* Gradient overlay */}
-      <div style={{ position: 'absolute', inset: 0, zIndex: 2, background: 'linear-gradient(180deg, rgba(5, 5, 15, 0.5) 0%, rgba(10, 10, 26, 0.3) 100%)' }} />
+      {/* Gradient overlay - fades in */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.5, delay: 0.5 }}
+        style={{ position: 'absolute', inset: 0, zIndex: 2, background: 'linear-gradient(180deg, rgba(5, 5, 15, 0.5) 0%, rgba(10, 10, 26, 0.3) 100%)' }}
+      />
 
-      {/* Nebula 1 */}
-      <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: '700px', height: '700px', zIndex: 3, background: 'radial-gradient(circle, rgba(100, 70, 180, 0.35) 0%, transparent 60%)', filter: 'blur(60px)' }} />
+      {/* Nebula 1 - fades in */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 2, delay: 0.8 }}
+        style={{ position: 'absolute', top: '-20%', right: '-10%', width: '700px', height: '700px', zIndex: 3, background: 'radial-gradient(circle, rgba(100, 70, 180, 0.35) 0%, transparent 60%)', filter: 'blur(60px)' }}
+      />
 
-      {/* Nebula 2 */}
-      <div style={{ position: 'absolute', bottom: '-15%', left: '-10%', width: '600px', height: '600px', zIndex: 3, background: 'radial-gradient(circle, rgba(40, 80, 150, 0.25) 0%, transparent 60%)', filter: 'blur(70px)' }} />
+      {/* Nebula 2 - fades in */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 2, delay: 1.0 }}
+        style={{ position: 'absolute', bottom: '-15%', left: '-10%', width: '600px', height: '600px', zIndex: 3, background: 'radial-gradient(circle, rgba(40, 80, 150, 0.25) 0%, transparent 60%)', filter: 'blur(70px)' }}
+      />
 
-      {/* Aurora */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', zIndex: 4, background: 'linear-gradient(180deg, rgba(78, 242, 210, 0.08) 0%, rgba(100, 80, 180, 0.1) 40%, transparent 100%)', filter: 'blur(50px)' }} />
+      {/* Aurora - fades in */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 2, delay: 1.2 }}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', zIndex: 4, background: 'linear-gradient(180deg, rgba(78, 242, 210, 0.08) 0%, rgba(100, 80, 180, 0.1) 40%, transparent 100%)', filter: 'blur(50px)' }}
+      />
 
       {/* Content */}
       <div style={{ position: 'relative', zIndex: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', textAlign: 'center' }}>
-        <h1 style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(3rem, 12vw, 6rem)', fontWeight: 'bold', color: 'white', letterSpacing: '0.5em', marginBottom: '0.5rem', textShadow: '0 0 40px rgba(255, 255, 255, 0.5), 0 0 80px rgba(150, 130, 200, 0.4), 0 5px 20px rgba(0,0,0,0.9)' }}>
-          OPIK
-        </h1>
-        <p style={{ fontFamily: 'Cinzel, serif', color: '#ece2b6', fontSize: 'clamp(0.7rem, 2vw, 1rem)', letterSpacing: '0.5em', marginBottom: '120px', textShadow: '0 0 15px rgba(236, 226, 182, 0.6)' }}>
-          CREATIVE PORTFOLIO
-        </p>
-        <button
+        {/* Title - OPIK */}
+        <motion.h1
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1.2, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+          style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(3rem, 12vw, 6rem)', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem', textShadow: '0 0 40px rgba(255, 255, 255, 0.5), 0 0 80px rgba(150, 130, 200, 0.4), 0 5px 20px rgba(0,0,0,0.9)' }}
+        >
+        GINIMAGE
+        </motion.h1>
+
+        {/* Subtitle - CREATIVE PORTFOLIO */}
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 1.0, ease: [0.25, 0.46, 0.45, 0.94] }}
+          style={{ fontFamily: 'Cinzel, serif', color: '#ece2b6', fontSize: 'clamp(0.7rem, 2vw, 1rem)', letterSpacing: '0.5em', marginBottom: '120px', textShadow: '0 0 15px rgba(236, 226, 182, 0.6)' }}
+        >
+        CREATIVE PORTFOLIO
+        </motion.p>
+
+        {/* Button - TAP TO START */}
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 1.8 }}
           onClick={onEnter}
           onMouseEnter={() => setIsBlinking(false)}
           onMouseLeave={() => setIsBlinking(true)}
@@ -217,9 +283,9 @@ const TitleScreen = ({ isActive, onEnter }) => {
           <span style={{ position: 'absolute', bottom: 0, left: 0, width: '25px', height: '25px', borderBottom: '2px solid rgba(236, 226, 182, 0.8)', borderLeft: '2px solid rgba(236, 226, 182, 0.8)' }} />
           <span style={{ position: 'absolute', bottom: 0, right: 0, width: '25px', height: '25px', borderBottom: '2px solid rgba(236, 226, 182, 0.8)', borderRight: '2px solid rgba(236, 226, 182, 0.8)' }} />
           TAP TO START
-        </button>
+        </motion.button>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

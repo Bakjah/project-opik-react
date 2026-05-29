@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 
 const Hero = () => {
+  const starTimeRef = useRef(0); // Time counter for star spawn
   const canvasRef = useRef(null);
   const starsRef = useRef([]);
   const shootingStarsRef = useRef([]);
@@ -42,6 +43,7 @@ const Hero = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       starsRef.current = [];
+      // Initialize stars with 0 opacity (not visible yet)
       for (let i = 0; i < 120; i++) {
         starsRef.current.push({
           x: Math.random() * canvas.width,
@@ -52,6 +54,8 @@ const Hero = () => {
           brightness: Math.random() * 0.4 + 0.6,
           twinkleDir: 1,
           twinkleSpeed: Math.random() * 0.01 + 0.005,
+          opacity: 0, // Each star starts invisible
+          spawnTime: Math.random() * 50000, // Random time to appear (0-5 seconds)
         });
       }
     };
@@ -63,12 +67,24 @@ const Hero = () => {
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Update time counter
+      starTimeRef.current += 16; // Approximate 60fps
+
       // BIG parallax offset (80px horizontal, 60px vertical)
       const mx = mouseRef.current.x * 80;
       const my = mouseRef.current.y * 60;
 
       // Stars with parallax
       starsRef.current.forEach(star => {
+        // Spawn animation - star appears based on its spawnTime
+        if (starTimeRef.current < star.spawnTime) {
+          // Star hasn't spawned yet, don't draw
+          return;
+        }
+
+        const spawnProgress = Math.min((starTimeRef.current - star.spawnTime) / 500, 1); // 500ms to fully appear
+        const currentOpacity = spawnProgress; // Simple linear fade-in
+
         star.x += star.speedX;
         star.y += star.speedY;
         if (star.x < 0) star.x = canvas.width;
@@ -85,14 +101,16 @@ const Hero = () => {
         star.brightness += star.twinkleSpeed * star.twinkleDir;
         if (star.brightness > 1 || star.brightness < 0.4) star.twinkleDir *= -1;
 
+        // Star with individual fade-in opacity
         ctx.beginPath();
         ctx.arc(drawX, drawY, star.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness})`;
+        ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness * currentOpacity})`;
         ctx.fill();
 
+        // Glow with fade-in opacity
         ctx.beginPath();
         ctx.arc(drawX, drawY, star.size * 3, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(200, 220, 255, ${star.brightness * 0.25})`;
+        ctx.fillStyle = `rgba(200, 220, 255, ${star.brightness * currentOpacity * 0.25})`;
         ctx.fill();
       });
 

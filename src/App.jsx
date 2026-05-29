@@ -13,6 +13,41 @@ import GalleryModal from './components/GalleryModal';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 
+// Animation variants for staggered fade-in
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2,
+      delayChildren: 0.8,
+    },
+  },
+};
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 1,
+      ease: [0.25, 0.46, 0.45, 0.94],
+    },
+  },
+};
+
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      duration: 1.2,
+      ease: 'easeOut',
+    },
+  },
+};
+
 function App() {
   // Stage management: 'loading' -> 'title' -> 'main'
   const [stage, setStage] = useState('loading');
@@ -44,7 +79,7 @@ function App() {
   };
 
   return (
-    <div className="relative min-h-screen bg-bg-dark text-text-main">
+    <div className="relative min-h-screen bg-[#050510] text-text-main">
       {/* Loading Screen */}
       {stage === 'loading' && (
         <LoadingScreen onComplete={handleLoadingComplete} />
@@ -62,31 +97,56 @@ function App() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1.5, delay: 0.3 }}
+            transition={{ duration: 0.8 }}
             className="relative"
           >
             {/* Ambient Background Effects */}
-            <StarCanvas />
+            <motion.div variants={fadeIn} initial="hidden" animate="visible">
+              <StarCanvas />
+            </motion.div>
 
             {/* Nebula Glows */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+            <motion.div
+              variants={fadeIn}
+              initial="hidden"
+              animate="visible"
+              transition={{ delay: 0.3 }}
+              className="fixed inset-0 pointer-events-none overflow-hidden z-0"
+            >
               <div className="nebula-glow bg-anemo-teal top-0 right-0" />
               <div className="nebula-glow bg-purple-500 bottom-0 left-0" />
-            </div>
+            </motion.div>
 
-            {/* Navigation */}
-            <Navbar />
+            {/* Navigation - fades in first */}
+            <motion.div variants={fadeInUp} initial="hidden" animate="visible">
+              <Navbar />
+            </motion.div>
 
-            {/* Main Content */}
-            <main>
-              <Hero />
-              <About />
-              <Portfolio onOpenModal={handleOpenModal} />
-              <Contact />
-            </main>
+            {/* Main Content - Smooth staggered fade-in */}
+            <motion.main
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="relative"
+            >
+              <motion.div variants={fadeInUp}>
+                <Hero />
+              </motion.div>
+              <motion.div variants={fadeInUp}>
+                <About />
+              </motion.div>
+              <motion.div variants={fadeInUp}>
+                <Portfolio onOpenModal={handleOpenModal} />
+              </motion.div>
+              <motion.div variants={fadeInUp}>
+                <Contact />
+              </motion.div>
+            </motion.main>
 
             {/* Footer */}
-            <Footer />
+            <motion.div variants={fadeInUp} initial="hidden" animate="visible">
+              <Footer />
+            </motion.div>
 
             {/* Gallery Modal */}
             <AnimatePresence>
