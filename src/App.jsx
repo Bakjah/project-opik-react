@@ -53,15 +53,20 @@ function App() {
   const [stage, setStage] = useState('loading');
   const [selectedProject, setSelectedProject] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [titleExiting, setTitleExiting] = useState(false);
 
   // Handle loading screen completion
   const handleLoadingComplete = () => {
     setStage('title');
   };
 
-  // Handle title screen enter (with white flash)
+  // Handle title screen enter - fade out title first
   const handleEnterMain = () => {
-    setStage('main');
+    setTitleExiting(true);
+    setTimeout(() => {
+      setStage('main');
+      setTitleExiting(false);
+    }, 800);
   };
 
   // Handle opening project modal
@@ -79,16 +84,17 @@ function App() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#050510] text-text-main">
+    <div className="relative min-h-screen bg-bg-dark text-text-main">
       {/* Loading Screen */}
       {stage === 'loading' && (
         <LoadingScreen onComplete={handleLoadingComplete} />
       )}
 
-      {/* Title Screen (Gatekeeper) */}
+      {/* Title Screen - with exit animation */}
       <TitleScreen
         isActive={stage === 'title'}
         onEnter={handleEnterMain}
+        isExiting={titleExiting}
       />
 
       {/* Main Website Content */}
@@ -97,7 +103,7 @@ function App() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 1, ease: 'easeOut' }}
             className="relative"
           >
             {/* Ambient Background Effects */}

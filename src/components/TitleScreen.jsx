@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 
-const TitleScreen = ({ isActive, onEnter }) => {
+const TitleScreen = ({ isActive, onEnter, isExiting }) => {
   const [isBlinking, setIsBlinking] = useState(true);
   const starTimeRef = useRef(0); // Time counter for star spawn
   const canvasRef = useRef(null);
@@ -189,48 +189,48 @@ const TitleScreen = ({ isActive, onEnter }) => {
   return (
     <motion.div
       initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 1.2, ease: 'easeOut' }}
+      animate={{ opacity: isExiting ? 0 : 1 }}
+      transition={{ duration: 0.8, ease: 'easeOut' }}
       style={{ position: 'fixed', inset: 0, zIndex: 998, background: '#050510', overflow: 'hidden' }}
     >
-      {/* Canvas Stars BG - fades in */}
+      {/* Canvas Stars BG - fades in and out */}
       <motion.canvas
         ref={canvasRef}
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 2, delay: 0.3 }}
+        animate={{ opacity: isExiting ? 0 : 1 }}
+        transition={{ duration: 0.6, delay: 0 }}
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 1 }}
       />
 
-      {/* Gradient overlay - fades in */}
+      {/* Gradient overlay - fades in and out */}
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1.5, delay: 0.5 }}
+        animate={{ opacity: isExiting ? 0 : 1 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
         style={{ position: 'absolute', inset: 0, zIndex: 2, background: 'linear-gradient(180deg, rgba(5, 5, 15, 0.5) 0%, rgba(10, 10, 26, 0.3) 100%)' }}
       />
 
-      {/* Nebula 1 - fades in */}
+      {/* Nebula 1 - fades in and out */}
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 2, delay: 0.8 }}
+        animate={{ opacity: isExiting ? 0 : 1 }}
+        transition={{ duration: 0.5, delay: 0.15 }}
         style={{ position: 'absolute', top: '-20%', right: '-10%', width: '700px', height: '700px', zIndex: 3, background: 'radial-gradient(circle, rgba(100, 70, 180, 0.35) 0%, transparent 60%)', filter: 'blur(60px)' }}
       />
 
-      {/* Nebula 2 - fades in */}
+      {/* Nebula 2 - fades in and out */}
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 2, delay: 1.0 }}
+        animate={{ opacity: isExiting ? 0 : 1 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
         style={{ position: 'absolute', bottom: '-15%', left: '-10%', width: '600px', height: '600px', zIndex: 3, background: 'radial-gradient(circle, rgba(40, 80, 150, 0.25) 0%, transparent 60%)', filter: 'blur(70px)' }}
       />
 
-      {/* Aurora - fades in */}
+      {/* Aurora - fades in and out */}
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 2, delay: 1.2 }}
+        animate={{ opacity: isExiting ? 0 : 1 }}
+        transition={{ duration: 0.5, delay: 0.25 }}
         style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', zIndex: 4, background: 'linear-gradient(180deg, rgba(78, 242, 210, 0.08) 0%, rgba(100, 80, 180, 0.1) 40%, transparent 100%)', filter: 'blur(50px)' }}
       />
 
@@ -239,8 +239,8 @@ const TitleScreen = ({ isActive, onEnter }) => {
         {/* Title - OPIK */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.2, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+          animate={{ opacity: isExiting ? 0 : 1, y: isExiting ? -20 : 0 }}
+          transition={{ duration: 0.5, delay: 0 }}
           style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(3rem, 12vw, 6rem)', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem', textShadow: '0 0 40px rgba(255, 255, 255, 0.5), 0 0 80px rgba(150, 130, 200, 0.4), 0 5px 20px rgba(0,0,0,0.9)' }}
         >
         GINIMAGE
@@ -249,8 +249,8 @@ const TitleScreen = ({ isActive, onEnter }) => {
         {/* Subtitle - CREATIVE PORTFOLIO */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 1.0, ease: [0.25, 0.46, 0.45, 0.94] }}
+          animate={{ opacity: isExiting ? 0 : 1, y: isExiting ? -10 : 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
           style={{ fontFamily: 'Cinzel, serif', color: '#ece2b6', fontSize: 'clamp(0.7rem, 2vw, 1rem)', letterSpacing: '0.5em', marginBottom: '120px', textShadow: '0 0 15px rgba(236, 226, 182, 0.6)' }}
         >
         CREATIVE PORTFOLIO
@@ -259,8 +259,8 @@ const TitleScreen = ({ isActive, onEnter }) => {
         {/* Button - TAP TO START */}
         <motion.button
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 1.8 }}
+          animate={{ opacity: isExiting ? 0 : 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
           onClick={onEnter}
           onMouseEnter={() => setIsBlinking(false)}
           onMouseLeave={() => setIsBlinking(true)}
