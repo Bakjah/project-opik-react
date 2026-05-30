@@ -10,21 +10,19 @@ const TitleScreen = ({ isActive, onEnter, isExiting }) => {
   const mouseRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 });
   const isMobileRef = useRef(false);
 
-  // Mouse/gyro tracking with smooth interpolation
+  // Mouse/Gyro tracking with smooth interpolation
   useEffect(() => {
     if (!isActive) return;
 
     let animId;
+    let gyroEnabledLocal = false;
 
     // Check if device is mobile
-    const checkMobile = () => {
-      isMobileRef.current = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 'ontouchstart' in window;
-    };
-    checkMobile();
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 'ontouchstart' in window;
 
     // For desktop - use mouse movement
     const onMouseMove = (e) => {
-      if (isMobileRef.current) return;
+      if (isMobile) return;
       mouseRef.current.targetX = (e.clientX / window.innerWidth - 0.5);
       mouseRef.current.targetY = (e.clientY / window.innerHeight - 0.5);
     };
@@ -48,21 +46,37 @@ const TitleScreen = ({ isActive, onEnter, isExiting }) => {
       }
     };
 
-    // Request permission for iOS 13+ device orientation
-    const requestGyroPermission = async () => {
-      if (typeof DeviceOrientationEvent !== 'undefined' &&
-          typeof DeviceOrientationEvent.requestPermission === 'function') {
+    // Enable gyro function
+    const enableGyro = async () => {
+      if (gyroEnabledLocal) return;
+
+      if (!window.DeviceOrientationEvent) return;
+
+      // For iOS 13+
+      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
         try {
           const permission = await DeviceOrientationEvent.requestPermission();
           if (permission === 'granted') {
             window.addEventListener('deviceorientation', onDeviceOrientation);
+            gyroEnabledLocal = true;
           }
         } catch (err) {
-          console.log('Device orientation permission denied');
+          console.log('Gyro permission denied');
         }
-      } else if (window.DeviceOrientationEvent) {
+      } else {
+        // For Android and older iOS
         window.addEventListener('deviceorientation', onDeviceOrientation);
+        gyroEnabledLocal = true;
       }
+    };
+
+    // For iOS - enable gyro on first user interaction
+    const handleFirstInteraction = () => {
+      if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        enableGyro();
+      }
+      window.removeEventListener('touchstart', handleFirstInteraction);
+      window.removeEventListener('click', handleFirstInteraction);
     };
 
     // Smooth interpolation
@@ -72,16 +86,17 @@ const TitleScreen = ({ isActive, onEnter, isExiting }) => {
       animId = requestAnimationFrame(update);
     };
 
-    // Add event listeners based on device type
-    if (isMobileRef.current) {
+    if (isMobile) {
       window.addEventListener('touchmove', onTouchMove, { passive: true });
-      const handleFirstTouch = () => {
-        requestGyroPermission();
-        window.removeEventListener('touchstart', handleFirstTouch);
-      };
-      window.addEventListener('touchstart', handleFirstTouch);
-      mouseRef.current.targetX = 0;
-      mouseRef.current.targetY = 0;
+
+      // Android - enable gyro directly
+      if (!/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        enableGyro();
+      } else {
+        // iOS - wait for user interaction
+        window.addEventListener('touchstart', handleFirstInteraction, { once: true });
+        window.addEventListener('click', handleFirstInteraction, { once: true });
+      }
     } else {
       window.addEventListener('mousemove', onMouseMove);
     }
@@ -91,6 +106,8 @@ const TitleScreen = ({ isActive, onEnter, isExiting }) => {
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchstart', handleFirstInteraction);
+      window.removeEventListener('click', handleFirstInteraction);
       cancelAnimationFrame(animId);
     };
   }, [isActive]);
