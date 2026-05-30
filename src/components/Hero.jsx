@@ -7,27 +7,97 @@ const Hero = () => {
   const starsRef = useRef([]);
   const shootingStarsRef = useRef([]);
   const mouseRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 });
+  const isMobileRef = useRef(false);
 
   // Mouse tracking with smooth interpolation
   useEffect(() => {
     let animId;
 
+    // Check if device is mobile
+    const checkMobile = () => {
+      isMobileRef.current = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 'ontouchstart' in window;
+    };
+    checkMobile();
+
+    // For desktop - use mouse movement
     const onMouseMove = (e) => {
+      if (isMobileRef.current) return; // Skip mouse on mobile
       mouseRef.current.targetX = (e.clientX / window.innerWidth - 0.5);
       mouseRef.current.targetY = (e.clientY / window.innerHeight - 0.5);
     };
 
+    // For mobile - use touch movement
+    const onTouchMove = (e) => {
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        mouseRef.current.targetX = (touch.clientX / window.innerWidth - 0.5) * 2; // Amplify for mobile
+        mouseRef.current.targetY = (touch.clientY / window.innerHeight - 0.5) * 2; // Amplify for mobile
+      }
+    };
+
+    // For mobile - use device orientation (gyroscope)
+    const onDeviceOrientation = (e) => {
+      if (e.gamma !== null && e.beta !== null) {
+        // gamma: left-right tilt (-90 to 90)
+        // beta: front-back tilt (-180 to 180)
+        // Normalize to -0.5 to 0.5 range
+        const gamma = Math.max(-45, Math.min(45, e.gamma)) / 90; // -0.5 to 0.5
+        const beta = Math.max(-45, Math.min(45, e.beta - 45)) / 90; // -0.5 to 0.5 (offset for natural phone holding)
+
+        mouseRef.current.targetX = gamma;
+        mouseRef.current.targetY = beta;
+      }
+    };
+
+    // Request permission for iOS 13+ device orientation
+    const requestGyroPermission = async () => {
+      if (typeof DeviceOrientationEvent !== 'undefined' &&
+          typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+          const permission = await DeviceOrientationEvent.requestPermission();
+          if (permission === 'granted') {
+            window.addEventListener('deviceorientation', onDeviceOrientation);
+          }
+        } catch (err) {
+          console.log('Device orientation permission denied');
+        }
+      } else if (window.DeviceOrientationEvent) {
+        // For non-iOS devices, just add the listener
+        window.addEventListener('deviceorientation', onDeviceOrientation);
+      }
+    };
+
+    // Smooth interpolation
     const update = () => {
-      mouseRef.current.x += (mouseRef.current.targetX - mouseRef.current.x) * 0.1;
-      mouseRef.current.y += (mouseRef.current.targetY - mouseRef.current.y) * 0.1;
+      mouseRef.current.x += (mouseRef.current.targetX - mouseRef.current.x) * 0.08;
+      mouseRef.current.y += (mouseRef.current.targetY - mouseRef.current.y) * 0.08;
       animId = requestAnimationFrame(update);
     };
 
-    window.addEventListener('mousemove', onMouseMove);
+    // Add event listeners based on device type
+    if (isMobileRef.current) {
+      // Mobile: use touch and gyro
+      window.addEventListener('touchmove', onTouchMove, { passive: true });
+      // Request gyro permission on first touch (for iOS)
+      const handleFirstTouch = () => {
+        requestGyroPermission();
+        window.removeEventListener('touchstart', handleFirstTouch);
+      };
+      window.addEventListener('touchstart', handleFirstTouch);
+
+      // Initialize with touch position
+      mouseRef.current.targetX = 0;
+      mouseRef.current.targetY = 0;
+    } else {
+      // Desktop: use mouse
+      window.addEventListener('mousemove', onMouseMove);
+    }
+
     update();
 
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('touchmove', onTouchMove);
       cancelAnimationFrame(animId);
     };
   }, []);
